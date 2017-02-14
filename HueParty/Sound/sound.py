@@ -113,6 +113,7 @@ class Sound:
 
         return song
 
+    # Normalize frequencies on the visible spectrum
     def normalize_frequencies(self):
         
         # Frequencies of the visible spectrum
