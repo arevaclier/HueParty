@@ -7,7 +7,12 @@
 #                            #
 ##############################
 
-import time, json, urllib.request, xmltodict, requests
+import json
+import requests
+import time
+import urllib.request
+import xmltodict
+
 from netdisco.discovery import NetworkDiscovery
 
 
@@ -132,8 +137,8 @@ class Hue:
         api_url = bridge + "api"
         # JSON data
         data = '{"devicetype":"' + self.DEVICETYPE + '"}'
-        # Defines how long the function is going to run (in seconds)
-        max_time = 30
+        # Defines how long the function is going to run (in seconds). Divide by 10 to take the request delay into account
+        max_time = 3
         start_time = time.clock()
 
         api_key = ""
@@ -144,7 +149,7 @@ class Hue:
         # This asks a JSON response from the API
         # Stops after 30 seconds or if a key was returned by the bridge.
         # Only indicated as 3 here because of REST requests lag.
-        while (time.clock() - start_time) < 3 and not api_key:
+        while (time.clock() - start_time) < max_time and not api_key:
             try:
                 response = requests.post(api_url, data=data)
                 test = response.json()
