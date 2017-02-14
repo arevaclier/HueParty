@@ -21,15 +21,16 @@ class Hue:
         self.APP_NAME = "HueParty"
         self.device = device
         self.DEVICETYPE = self.APP_NAME + "#" + self.device
+        self.config_file = 'config.json'
 
         # Try to open the config file
         try:
-            config = open('config.json', 'r')
+            config = open(self.config_file, 'r')
             config.close()
 
         # If it is not present, create it
         except FileNotFoundError:
-            config = open('config.json', 'w+')
+            config = open(self.config_file, 'w+')
             config.close()
 
         # Connect to the bridge
@@ -38,19 +39,47 @@ class Hue:
         self.api_key = config_data["api_key"]
         self.ip = config_data["ip"]
 
+        self.api_url = self.ip + "api/" + self.api_key + "/"
+
+        self.light_list = self.getLights()
+
+    '''
+    -------------------------------
+            CONNECTION FUNCTIONS
+    -------------------------------
+    '''
+
+    # Removes the eventual unwanted characters from a JSON response
+    def parseRequest(self, text):
+
+        # Removes the first and last bracket if it exists
+        if text[:1] == "[":
+            text = text[1:]
+            text = text[:-1]
+
+        return json.loads(text)
+
+
     # Checks if devices found on the network are philips hue bridges.
     def check(self, bridge):
         # Request the description file from the bridge
         url = bridge + "description.xml"
-        response = urllib.request.urlopen(url)
 
-        # Parse it in JSON
-        xml_response = xmltodict.parse(response.read())
+        # Try to get the description from the bridge
+        try:
+            response = urllib.request.urlopen(url)
 
-        # If the manufacturer is Phillips, then assume it is a hue bridge
-        if xml_response["root"]["device"]["manufacturer"] == "Royal Philips Electronics":
-            return True
-        return False
+            # Parse it in JSON
+            xml_response = xmltodict.parse(response.read())
+
+            # If the manufacturer is Phillips, then assume it is a hue bridge
+            if xml_response["root"]["device"]["manufacturer"] == "Royal Philips Electronics":
+                return True
+            return False
+
+        # If the file is not found, catch the 404 error
+        except urllib.error.HTTPError:
+            return False
 
     # Use various methods to find a philips hue bridge on the network.
     # See https://developers.meethue.com/documentation/hue-bridge-discovery
@@ -137,7 +166,8 @@ class Hue:
         api_url = bridge + "api"
         # JSON data
         data = '{"devicetype":"' + self.DEVICETYPE + '"}'
-        # Defines how long the function is going to run (in seconds). Divide by 10 to take the request delay into account
+        # Defines how long the function is going to run (in seconds). Divide by 10 to take the request delay into
+        # account
         max_time = 3
         start_time = time.clock()
 
@@ -163,12 +193,25 @@ class Hue:
     # Connect to a hue bridge
     def connect(self):
         # Open config file
-        save_file = open('config.json', 'r+')
+        save_file = open(self.config_file, 'r+')
         # If non empty, load data
         try:
             config_data = json.load(save_file)
             save_file.close()
-            return config_data
+            if self.check(config_data["ip"]):
+                api_url = config_data["ip"] + "api/" + config_data["api_key"]
+                whitelist = requests.get(api_url + "/lights").text
+                whitelist = self.parseRequest(whitelist)
+                try:
+                    if len(whitelist) > 0:
+                        test = whitelist["1"]
+                    return config_data
+                except KeyError:
+                    print("Unauthorized User")
+                    raise ValueError
+            else:
+                raise ValueError('The device is not a hue bridge')
+
 
         # If empty, perform discovery
         except ValueError:
@@ -220,8 +263,43 @@ class Hue:
             # Saves the IP address and the API key in a file.
             config_data["api_key"] = api_key
             config_data["ip"] = ip
+            save_file.close()
+
+            # Erase the content in the config file
+            save_file = open(self.config_file, 'w+')
             json.dump(config_data, save_file)
             save_file.close()
 
             print("Connection success!")
             return config_data
+    '''
+    -------------------------------
+        LIGHT RELATED FUNCTIONS
+    -------------------------------
+    '''
+    # Get all lights (returns a list of numbers)
+    def getLights(self):
+        url = self.api_url + "lights"
+
+        lights = requests.get(url).text
+        lights = json.loads(lights)
+
+        return lights.keys()
+
+    # Turns a light on
+    def turnOn(self, light_id):
+        url = self.api_url + "lights/" + light_id + "/state"
+        data = '{"on": true}'
+        response = requests.put(url, data=data)
+
+        if "error" in response.text:
+            print(response)
+
+    # Turns a light off
+    def turnOff(self, light_id):
+        url = self.api_url + "lights/" + light_id + "/state"
+        data = '{"on": false}'
+        response = requests.put(url, data=data)
+
+        if "error" in response.text:
+            print(response)
