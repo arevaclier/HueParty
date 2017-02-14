@@ -115,7 +115,7 @@ class Sound:
 
     def normalize_frequencies(self):
         
-        #Frequencies of the visible spectrum
+        # Frequencies of the visible spectrum
         max_nm = 750
         min_nm = 380
 
