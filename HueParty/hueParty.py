@@ -8,6 +8,7 @@
 ##############################
 
 from HueParty.Sound.sound import Sound
+from HueParty.Hue.hue import Hue
 
-#hue = Hue("Desktop-Linux")
-sound = Sound("Example.wav", 20)
+hue = Hue("Desktop-Linux")
+#sound = Sound("Example.wav", 20)
