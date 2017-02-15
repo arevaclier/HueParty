@@ -11,7 +11,7 @@ import pylab
 from scipy.io import wavfile
 import sys
 
-
+# Class handling sound processing for wav files.
 class Sound:
     def __init__(self, wav_file, samples_per_second):
 
@@ -115,16 +115,16 @@ class Sound:
 
     # Normalize frequencies on the visible spectrum
     def normalize_frequencies(self):
-        
+
         # Frequencies of the visible spectrum
         max_nm = 750
         min_nm = 380
 
-        #Adapting our scale to range on the visible spectrum
+        # Adapting our scale to range on the visible spectrum
         scale = max_nm - min_nm
         max_freq = max(self.frequencies)
 
-        #Scaling the frequencies of the audio to light
+        # Scaling the frequencies of the audio to light
         for index in range(len(self.frequencies)):
             calc = (self.frequencies[index] * scale / max_freq) + min_nm
             self.frequencies[index] = int(calc)
