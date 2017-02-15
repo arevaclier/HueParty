@@ -120,8 +120,6 @@ class LuxFile:
             green = -(nm - 645) / (645 - 580)
         elif 645 <= nm < 781:
             red = 1.0
-        else:
-            pass
 
         # Adapt the intensity near the extremes of the spectrum
         if 380 <= nm < 420:
@@ -130,8 +128,6 @@ class LuxFile:
             factor = 1.0
         elif 701 <= nm < 781:
             factor = 0.3 + 0.7 * (780 - nm) / (780 - 700)
-        else:
-            pass
 
         # Adapt values (we don't want 0^x = 1 for x != 0)
         rgb = []
