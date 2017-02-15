@@ -7,18 +7,23 @@
 #                            #
 ##############################
 
-from HueParty.Sound.sound import Sound
+import os
 from HueParty.Hue.hue import Hue
 from HueParty.File.md5calculator import md5Calculator
 from HueParty.File.luxfile import LuxFile
 
-#hue = Hue("Desktop-Linux")
-#sound = Sound("Example.wav", 20)
+
+def check_config_dirs():
+    if not os.path.exists("config"):
+        os.makedirs("config")
+    if not os.path.exists("lux"):
+        os.makedirs("lux")
+
+check_config_dirs()
+
+Hue = Hue("Desktop-Linux")
 
 md5 = md5Calculator()
-
 sound_md5 = md5.get_md5("Example.wav")
-print(sound_md5)
 
-lux_file = LuxFile(sound_md5)
-
+lux_file = LuxFile(sound_md5, "Example.wav")

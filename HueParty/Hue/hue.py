@@ -21,17 +21,16 @@ class Hue:
         self.APP_NAME = "HueParty"
         self.device = device
         self.DEVICETYPE = self.APP_NAME + "#" + self.device
-        self.config_file = 'config.json'
+        self.config_dir = "config/"
+        self.config_file = self.config_dir + 'config.json'
 
         # Try to open the config file
         try:
             config = open(self.config_file, 'r')
-            config.close()
-
         # If it is not present, create it
         except FileNotFoundError:
             config = open(self.config_file, 'w+')
-            config.close()
+        config.close()
 
         # Connect to the bridge
         config_data = self.connect()

@@ -39,11 +39,16 @@ class LuxFile:
                 lux_file, lux_md5 = self.create_lux_file()
 
                 # Remove previous row from database
+                # Go to top of file
+                self.database.seek(0)
                 reader = csv.reader(self.database, delimiter=",")
                 database = []
                 for i in reader:
-                    if i[0] != self.song_md5:
-                        database.append()
+                    # Avoid blank lines
+                    if i:
+                        # Remove existing info about the song
+                        if i[0] != self.song_md5:
+                            database.append(i)
                 self.database.close()
                 # Rebuild database
                 self.database = open(self.database_complete_filename, "w+")
@@ -65,11 +70,15 @@ class LuxFile:
 
     # Check if a song is in the database
     def is_in_db(self):
+        # Go to top of file
+        self.database.seek(0)
         reader = csv.reader(self.database, delimiter=",")
         for row in reader:
-            if row[0] == self.song_md5:
-                self.lux_md5 = row[1]
-                return True
+            # Avoid blank lines
+            if row:
+                if row[0] == self.song_md5:
+                    self.lux_md5 = row[1]
+                    return True
         return False
 
     # Add a song to the database
@@ -80,4 +89,72 @@ class LuxFile:
 
     # Create lux file from the song using the Sound class
     def create_lux_file(self):
-        pass
+        return {}, "abc"
+
+    # Create RGB values from brightness and values of the visible spectrum in nm
+    def nm_to_rgb(self, brightness, nm):
+
+        # The algorithm was adapted from Earl F. Glynn's algorithm found on his web page:
+        # http://www.efg2.com/Lab/ScienceAndEngineering/Spectra.htm
+        gamma = 0.8
+        red = 0.0
+        green = 0.0
+        blue = 0.0
+        factor = 0.0
+
+        # Scale values from the light spectrum as values of RGB
+        if 380 <= nm < 440:
+            red = -(nm - 440) / (490 - 380)
+            blue = 1.0
+        elif 440 <= nm < 490:
+            green = (nm - 440) / (490 - 440)
+            blue = 1.0
+        elif 490 <= nm < 510:
+            green = 1.0
+            blue = -(nm - 510) / (510 - 490)
+        elif 510 <= nm < 580:
+            red = (nm - 510) / (580 - 510)
+            green = 1.0
+        elif 580 <= nm < 645:
+            red = 1.0
+            green = -(nm - 645) / (645 - 580)
+        elif 645 <= nm < 781:
+            red = 1.0
+        else:
+            pass
+
+        # Adapt the intensity near the extremes of the spectrum
+        if 380 <= nm < 420:
+            factor = 0.3 + 0.7 * (nm - 380) / (420 - 380)
+        elif 420 <= nm < 701:
+            factor = 1.0
+        elif 701 <= nm < 781:
+            factor = 0.3 + 0.7 * (780 - nm) / (780 - 700)
+        else:
+            pass
+
+        # Adapt values (we don't want 0^x = 1 for x != 0)
+        rgb = []
+
+        # Red
+        if red == 0.0:
+            rgb.append(0)
+        else:
+            value = int(round(brightness * (red * factor)**gamma))
+            rgb.append(value)
+
+        # Green
+        if green == 0.0:
+            rgb.append(0)
+        else:
+            value = int(round(brightness * (green * factor)**gamma))
+            rgb.append(value)
+
+        # Blue
+        if blue == 0.0:
+            rgb.append(0)
+        else:
+            value = int(round(brightness * (blue * factor) ** gamma))
+            rgb.append(value)
+
+        return rgb
