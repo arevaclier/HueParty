@@ -144,3 +144,8 @@ class Sound:
         for index in range(len(self.amplitudes)):
             calc = (self.amplitudes[index] * max_value) / max_amplitude
             self.amplitudes[index] = round(calc)
+
+    # Getter for song
+    @property
+    def get_song(self):
+        return self.song
