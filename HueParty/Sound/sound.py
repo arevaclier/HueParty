@@ -11,6 +11,7 @@ import pylab
 from scipy.io import wavfile
 import sys
 
+
 # Class handling sound processing for wav files.
 class Sound:
     def __init__(self, wav_file, samples_per_second):
@@ -19,6 +20,7 @@ class Sound:
         self.MAX_AMP = 32767
         self.wav_file = wav_file
         self.samples_per_second = samples_per_second
+        self.song = ""
 
         # Try to get a representation of the audio file in terms of time: {frequency, amplitude}
         try:
@@ -53,6 +55,7 @@ class Sound:
             self.song = self.get_info()
 
         except:
+            print("There")
             print(sys.exc_info())
 
     # Get all frequencies at certain timestamps. Return both.
@@ -102,14 +105,14 @@ class Sound:
 
     # Combines the values for timestamps, amplitudes and frequencies and return them
     def get_info(self):
-        song = []
+        song = {}
 
         for index in range(len(self.time)):
             t = self.time[index]
             f = self.frequencies[index]
             a = self.amplitudes[index]
 
-            song.append({t: {"freq": f, "amp": a}})
+            song.update({t: {"freq": f, "amp": a}})
 
         return song
 
@@ -146,6 +149,5 @@ class Sound:
             self.amplitudes[index] = round(calc)
 
     # Getter for song
-    @property
     def get_song(self):
         return self.song

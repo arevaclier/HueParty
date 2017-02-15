@@ -2,10 +2,11 @@ import csv
 import os
 import json
 from HueParty.File.md5calculator import md5Calculator
+from HueParty.Sound.sound import Sound
 
 
 class LuxFile:
-    def __init__(self, song_md5, song_file):
+    def __init__(self, song_md5, song_file, sampling_rate):
         self.song_md5 = song_md5
 
         # Database name and location
@@ -17,6 +18,9 @@ class LuxFile:
         self.lux_file_directory = "lux/"
         self.song_file = song_file
         self.lux_md5 = ""
+
+        # Lux sampling rate (per second)
+        self.sampling_rate = sampling_rate
 
         self.database = open(self.database_complete_filename, "a+")
 
@@ -88,8 +92,39 @@ class LuxFile:
         writer.writerow(data)
 
     # Create lux file from the song using the Sound class
+    # Returns the lux_file json data and the md5 of the lux file
     def create_lux_file(self):
-        return {}, "abc"
+
+        # Analyse the song file
+        song_class = Sound(self.song_file, self.sampling_rate)
+        song = song_class.get_song()
+
+        # Transform the values for frequencies and amplitudes to RGB
+        for key in song:
+            rgb = self.nm_to_rgb(song[key]["amp"], song[key]["freq"])
+            song[key]["rgb"] = song[key].pop("freq")
+            song[key]["rgb"] = rgb
+            song[key].pop("amp")
+
+        # Create the .lux file
+        tmp_file_path = self.lux_file_directory + "tmp"
+
+        # Dump the JSON dictionary inside
+        lux_file = open(tmp_file_path, "w+")
+        json_dic = json.dumps(song, sort_keys=True)
+        json.dump(json_dic, lux_file)
+        lux_file.close()
+
+        # Get the file's md5
+        md5 = md5Calculator()
+        lux_md5 = md5.get_md5(tmp_file_path)
+
+        # Rename the file to "md5".lux
+        lux_file_name = self.lux_file_directory + lux_md5 + ".lux"
+        os.rename(tmp_file_path, lux_file_name)
+
+        # Return the JSON dictionary and the md5 of the file
+        return json_dic, lux_md5
 
     # Create RGB values from brightness and values of the visible spectrum in nm
     def nm_to_rgb(self, brightness, nm):
@@ -153,4 +188,5 @@ class LuxFile:
             value = int(round(brightness * (blue * factor) ** gamma))
             rgb.append(value)
 
-        return rgb
+        rgb_dict = {'r': rgb[0], 'g': rgb[1], 'b': rgb[2]}
+        return rgb_dict

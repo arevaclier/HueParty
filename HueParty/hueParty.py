@@ -21,9 +21,11 @@ def check_config_dirs():
 
 check_config_dirs()
 
+sound_file = "Example.wav"
+
 Hue = Hue("Desktop-Linux")
 
 md5 = md5Calculator()
-sound_md5 = md5.get_md5("Example.wav")
+sound_md5 = md5.get_md5(sound_file)
 
-lux_file = LuxFile(sound_md5, "Example.wav")
+lux_file = LuxFile(sound_md5, sound_file)
