@@ -108,7 +108,7 @@ class Sound:
         song = {}
 
         for index in range(len(self.time)):
-            t = self.time[index]
+            t = round(self.time[index], 2)
             f = self.frequencies[index]
             a = self.amplitudes[index]
 

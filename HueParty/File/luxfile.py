@@ -1,6 +1,9 @@
 import csv
 import os
 import json
+
+from HueParty.Sound.audiotranscode import AudioTranscode
+
 from HueParty.File.md5calculator import md5Calculator
 from HueParty.Sound.sound import Sound
 
@@ -95,9 +98,13 @@ class LuxFile:
     # Returns the lux_file json data and the md5 of the lux file
     def create_lux_file(self):
 
+        # Convert to song file to wav
+        audio_handler = AudioTranscode()
+        audio_handler.transcode(self.song_file, 'tmp.wav')
         # Analyse the song file
-        song_class = Sound(self.song_file, self.sampling_rate)
+        song_class = Sound("tmp.wav", self.sampling_rate)
         song = song_class.get_song()
+        #os.remove("tmp.wav")
 
         # Transform the values for frequencies and amplitudes to RGB
         for key in song:
@@ -190,3 +197,6 @@ class LuxFile:
 
         rgb_dict = {'r': rgb[0], 'g': rgb[1], 'b': rgb[2]}
         return rgb_dict
+
+    def get_file(self):
+        return self.lux_file

@@ -12,6 +12,9 @@ import requests
 import time
 import urllib.request
 import xmltodict
+from colorsys import rgb_to_hsv
+import threading
+import pyglet
 
 from netdisco.discovery import NetworkDiscovery
 
@@ -40,7 +43,7 @@ class Hue:
 
         self.api_url = self.ip + "api/" + self.api_key + "/"
 
-        self.light_list = self.getLights()
+        self.light_list = list(self.get_lights())
 
     '''
     -------------------------------
@@ -57,7 +60,6 @@ class Hue:
             text = text[:-1]
 
         return json.loads(text)
-
 
     # Checks if devices found on the network are philips hue bridges.
     def check(self, bridge):
@@ -271,13 +273,15 @@ class Hue:
 
             print("Connection success!")
             return config_data
+
     '''
     -------------------------------
         LIGHT RELATED FUNCTIONS
     -------------------------------
     '''
+
     # Get all lights (returns a list of numbers)
-    def getLights(self):
+    def get_lights(self):
         url = self.api_url + "lights"
 
         lights = requests.get(url).text
@@ -285,20 +289,58 @@ class Hue:
 
         return lights.keys()
 
-    # Turns a light on
-    def turnOn(self, light_id):
-        url = self.api_url + "lights/" + light_id + "/state"
-        data = '{"on": true}'
-        response = requests.put(url, data=data)
+    # Opens a lux files and plays it
+    def play_file(self, lux_file, sample_rate):
 
-        if "error" in response.text:
-            print(response)
+        a = threading.Thread(target=self.play_sound_test())
+        a.start()
+        # Loads the file
+        dictionary = json.loads(lux_file)
+        # Used to cycle through the lights
+        iteration = 0
 
-    # Turns a light off
-    def turnOff(self, light_id):
-        url = self.api_url + "lights/" + light_id + "/state"
-        data = '{"on": false}'
-        response = requests.put(url, data=data)
+        # Calculate transition time between two states for Hue lights
+        transition_time = int(round((1 / sample_rate) / 2, 1) * 10)
 
-        if "error" in response.text:
-            print(response)
+        # For each signal from the lux file, transform the RGB values to HSV for the Hue
+        for key in sorted(dictionary, key=lambda x: float(x)):
+            r = dictionary[key]["rgb"]["r"]
+            g = dictionary[key]["rgb"]["g"]
+            b = dictionary[key]["rgb"]["b"]
+
+            hsv = rgb_to_hsv(r, g, b)
+
+            light = [int(round(hsv[0] * 65335)), int(round(hsv[1] * 255)), hsv[2]]
+
+            # Start each update in a separate thread. This ensures the lights will stay in sync with the music
+            # On top of this, calulate how long the process takes and subtract it from the sleeping time. This is to
+            # make sure the lights won't get ahead or behind the song
+            t = time.process_time()
+            thread = threading.Thread(target=self.set_light, args=(light, iteration, transition_time, ))
+            thread.start()
+
+            elapsed_time = time.process_time() - t
+            time_to_sleep = 1 / sample_rate - elapsed_time
+
+            # If the time before the next signal is bigger than 0, wait.
+            if time_to_sleep > 0:
+                time.sleep(time_to_sleep)
+
+            iteration += 1
+
+    def set_light(self, light, i, transition_time):
+
+        lights = [3, 5, 6]
+        update_light = lights[i % 3]
+        #update_light = self.light_list[i % len(self.light_list)]
+
+        req_single = '{"bri": ' + str(light[2]) + ', "sat": ' + str(light[1]) + ', "hue": ' + str(
+            light[0]) + ', "transitiontime":' + str(transition_time) + '}'
+
+        url_light = self.api_url + "lights/" + str(update_light) + "/state"
+        print(req_single, url_light)
+        requests.put(url_light, data=req_single)
+
+    def play_sound_test(self):
+        sound = pyglet.media.load('tmp.wav', streaming=False)
+        sound.play()

@@ -8,9 +8,9 @@
 ##############################
 
 import os
-from HueParty.Hue.hue import Hue
-from HueParty.File.md5calculator import md5Calculator
 from HueParty.File.luxfile import LuxFile
+from HueParty.File.md5calculator import md5Calculator
+from HueParty.Hue.hue import Hue
 
 
 def check_config_dirs():
@@ -21,11 +21,14 @@ def check_config_dirs():
 
 check_config_dirs()
 
-sound_file = "Example.wav"
+sound_file = "13 - Voulez Vous.flac"
+sampling_rate = 5
 
-Hue = Hue("Desktop-Linux")
+hue = Hue("Desktop-Linux")
 
 md5 = md5Calculator()
 sound_md5 = md5.get_md5(sound_file)
 
-lux_file = LuxFile(sound_md5, sound_file)
+lux_file = LuxFile(sound_md5, sound_file, sampling_rate)
+
+hue.play_file(lux_file.get_file(), sampling_rate)
