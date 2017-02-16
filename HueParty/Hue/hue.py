@@ -14,8 +14,7 @@ import urllib.request
 import xmltodict
 from colorsys import rgb_to_hsv
 import threading
-import pyglet
-
+import pygame
 from netdisco.discovery import NetworkDiscovery
 
 
@@ -44,6 +43,9 @@ class Hue:
         self.api_url = self.ip + "api/" + self.api_key + "/"
 
         self.light_list = list(self.get_lights())
+
+        pygame.init()
+        pygame.mixer.init()
 
     '''
     -------------------------------
@@ -290,10 +292,10 @@ class Hue:
         return lights.keys()
 
     # Opens a lux files and plays it
-    def play_file(self, lux_file, sample_rate):
+    def play_file(self, lux_file, sample_rate, music):
 
-        a = threading.Thread(target=self.play_sound_test())
-        a.start()
+        pygame.mixer.music.load(music)
+        pygame.mixer.music.play(-1)
         # Loads the file
         dictionary = json.loads(lux_file)
         # Used to cycle through the lights
@@ -340,7 +342,3 @@ class Hue:
         url_light = self.api_url + "lights/" + str(update_light) + "/state"
         print(req_single, url_light)
         requests.put(url_light, data=req_single)
-
-    def play_sound_test(self):
-        sound = pyglet.media.load('tmp.wav', streaming=False)
-        sound.play()

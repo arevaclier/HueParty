@@ -21,8 +21,8 @@ def check_config_dirs():
 
 check_config_dirs()
 
-sound_file = "13 - Voulez Vous.flac"
-sampling_rate = 5
+sound_file = "1-07 - Make It wit Chu.flac"
+sampling_rate = 2
 
 hue = Hue("Desktop-Linux")
 
@@ -31,4 +31,4 @@ sound_md5 = md5.get_md5(sound_file)
 
 lux_file = LuxFile(sound_md5, sound_file, sampling_rate)
 
-hue.play_file(lux_file.get_file(), sampling_rate)
+hue.play_file(lux_file.get_file(), sampling_rate, sound_file)
