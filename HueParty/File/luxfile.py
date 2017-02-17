@@ -104,7 +104,7 @@ class LuxFile:
         # Analyse the song file
         song_class = Sound("tmp.wav", self.sampling_rate)
         song = song_class.get_song()
-        #os.remove("tmp.wav")
+        os.remove("tmp.wav")
 
         # Transform the values for frequencies and amplitudes to RGB
         for key in song:
@@ -176,21 +176,21 @@ class LuxFile:
 
         # Red
         if red == 0.0:
-            rgb.append(0)
+            rgb.append(1)
         else:
             value = int(round(brightness * (red * factor)**gamma))
             rgb.append(value)
 
         # Green
         if green == 0.0:
-            rgb.append(0)
+            rgb.append(1)
         else:
             value = int(round(brightness * (green * factor)**gamma))
             rgb.append(value)
 
         # Blue
         if blue == 0.0:
-            rgb.append(0)
+            rgb.append(1)
         else:
             value = int(round(brightness * (blue * factor) ** gamma))
             rgb.append(value)

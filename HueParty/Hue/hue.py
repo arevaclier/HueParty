@@ -12,7 +12,7 @@ import requests
 import time
 import urllib.request
 import xmltodict
-from colorsys import rgb_to_hsv
+from HueParty.Hue.rgbxy import Converter
 import threading
 import pygame
 from netdisco.discovery import NetworkDiscovery
@@ -43,6 +43,8 @@ class Hue:
         self.api_url = self.ip + "api/" + self.api_key + "/"
 
         self.light_list = list(self.get_lights())
+
+        self.rgb_xy = Converter()
 
         pygame.init()
         pygame.mixer.init()
@@ -310,9 +312,9 @@ class Hue:
             g = dictionary[key]["rgb"]["g"]
             b = dictionary[key]["rgb"]["b"]
 
-            hsv = rgb_to_hsv(r, g, b)
+            xy = self.rgb_xy.rgb_to_xy(r, g, b)
 
-            light = [int(round(hsv[0] * 65335)), int(round(hsv[1] * 255)), hsv[2]]
+            light = [xy[0], xy[1]]
 
             # Start each update in a separate thread. This ensures the lights will stay in sync with the music
             # On top of this, calulate how long the process takes and subtract it from the sleeping time. This is to
@@ -336,8 +338,7 @@ class Hue:
         update_light = lights[i % 3]
         #update_light = self.light_list[i % len(self.light_list)]
 
-        req_single = '{"bri": ' + str(light[2]) + ', "sat": ' + str(light[1]) + ', "hue": ' + str(
-            light[0]) + ', "transitiontime":' + str(transition_time) + '}'
+        req_single = '{"xy": ' + str(light) + ', "transitiontime":' + str(transition_time) + '}'
 
         url_light = self.api_url + "lights/" + str(update_light) + "/state"
         print(req_single, url_light)

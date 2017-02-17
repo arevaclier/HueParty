@@ -21,7 +21,8 @@ def check_config_dirs():
 
 check_config_dirs()
 
-sound_file = "1-07 - Make It wit Chu.flac"
+sound_file = "Music/09 - When Love and Hate Collide.flac"
+
 sampling_rate = 2
 
 hue = Hue("Desktop-Linux")
